@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_REFRESH_TOKEN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +39,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return {
             CONF_ACCESS_TOKEN: mobile_account.access_token,
+            CONF_REFRESH_TOKEN: mobile_account.refresh_token,
             CONF_EMAIL: web_account_info.email,
             CONF_UNIQUE_ID: web_account_info.user_id,
         }
@@ -66,7 +67,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(
                     title=info[CONF_EMAIL],
-                    data={CONF_ACCESS_TOKEN: info[CONF_ACCESS_TOKEN]},
+                    data={CONF_ACCESS_TOKEN: info[CONF_ACCESS_TOKEN],
+                          CONF_REFRESH_TOKEN: info[CONF_REFRESH_TOKEN],
+                          },
                 )
 
         return self.async_show_form(

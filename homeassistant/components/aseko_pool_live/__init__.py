@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_REFRESH_TOKEN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,9 +23,9 @@ PLATFORMS: list[str] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Aseko Pool Live from a config entry."""
     account = MobileAccount(
-        async_get_clientsession(hass), access_token=entry.data[CONF_ACCESS_TOKEN]
+        async_get_clientsession(hass), access_token=entry.data[CONF_ACCESS_TOKEN],
+        refresh_token=entry.data[CONF_REFRESH_TOKEN]
     )
-
     try:
         units = await account.get_units()
     except APIUnavailable as err:
@@ -56,6 +56,7 @@ class AsekoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Variable]]):
 
     def __init__(self, hass: HomeAssistant, unit: Unit) -> None:
         """Initialize global Aseko unit data updater."""
+        self.hass = hass
         self._unit = unit
 
         if self._unit.name:
@@ -73,4 +74,6 @@ class AsekoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Variable]]):
     async def _async_update_data(self) -> dict[str, Variable]:
         """Fetch unit data."""
         await self._unit.get_state()
+        data = {CONF_ACCESS_TOKEN: self._unit._account.access_token, CONF_REFRESH_TOKEN: self._unit._account.refresh_token}
+        self.hass.config_entries.async_update_entry(self.config_entry, data=data)
         return {variable.type: variable for variable in self._unit.variables}

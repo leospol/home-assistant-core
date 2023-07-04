@@ -1,3 +1,7 @@
 """Constants for the Aseko Pool Live integration."""
 
-DOMAIN = "aseko_pool_live"
+from typing import Final
+
+
+DOMAIN: Final = "aseko_pool_live"
+CONF_REFRESH_TOKEN: Final = "refresh_token"
